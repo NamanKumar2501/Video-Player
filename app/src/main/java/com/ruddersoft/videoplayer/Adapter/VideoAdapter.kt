@@ -5,6 +5,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.ruddersoft.videoplayer.R
@@ -12,9 +14,8 @@ import com.ruddersoft.videoplayer.model.VideoModel
 import java.util.concurrent.TimeUnit
 
 class VideoAdapter(
-    private val videoList: List<VideoModel>,
     private val onItemClick: (VideoModel) -> Unit // Callback for item clicks
-) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
+) : ListAdapter<VideoModel, VideoAdapter.VideoViewHolder>(VideoDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_video, parent, false)
@@ -22,14 +23,12 @@ class VideoAdapter(
     }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
-        val video = videoList[position]
+        val video = getItem(position)  // Get the item at position
         holder.bind(video)
         holder.itemView.setOnClickListener {
             onItemClick(video)
         }
     }
-
-    override fun getItemCount() = videoList.size
 
     inner class VideoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
@@ -53,6 +52,17 @@ class VideoAdapter(
                 hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
                 else -> String.format("%d:%02d", minutes, seconds)
             }
+        }
+    }
+
+    // DiffUtil callback to detect differences between old and new list
+    class VideoDiffCallback : DiffUtil.ItemCallback<VideoModel>() {
+        override fun areItemsTheSame(oldItem: VideoModel, newItem: VideoModel): Boolean {
+            return oldItem.videoUrl == newItem.videoUrl
+        }
+
+        override fun areContentsTheSame(oldItem: VideoModel, newItem: VideoModel): Boolean {
+            return oldItem == newItem
         }
     }
 }
